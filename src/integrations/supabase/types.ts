@@ -99,6 +99,47 @@ export type Database = {
           },
         ]
       }
+      inspiration_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          media_type: string
+          media_url: string
+          notes: string | null
+          shared_with_vendors: boolean | null
+          title: string | null
+          wedding_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          media_type: string
+          media_url: string
+          notes?: string | null
+          shared_with_vendors?: boolean | null
+          title?: string | null
+          wedding_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          media_type?: string
+          media_url?: string
+          notes?: string | null
+          shared_with_vendors?: boolean | null
+          title?: string | null
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspiration_items_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestones: {
         Row: {
           created_at: string | null
@@ -180,6 +221,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vendors: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          rating: number | null
+          reviews_count: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          rating?: number | null
+          reviews_count?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          rating?: number | null
+          reviews_count?: number | null
+        }
+        Relationships: []
       }
       weddings: {
         Row: {
