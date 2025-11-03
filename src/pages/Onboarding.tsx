@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Heart } from 'lucide-react';
+import { Heart, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
@@ -14,6 +14,7 @@ export default function Onboarding() {
   const [location, setLocation] = useState('');
   const [theme, setTheme] = useState('');
   const [budget, setBudget] = useState('');
+  const [partnerEmail, setPartnerEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ export default function Onboarding() {
         location: location || null,
         theme: theme || null,
         total_budget: budget ? parseFloat(budget) : 0,
+        partner_email: partnerEmail || null,
       });
 
       if (error) throw error;
@@ -96,6 +98,20 @@ export default function Onboarding() {
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="partnerEmail">Partner's Email (Optional)</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="partnerEmail"
+                  type="email"
+                  placeholder="partner@example.com"
+                  value={partnerEmail}
+                  onChange={(e) => setPartnerEmail(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button type="submit" className="flex-1" disabled={loading}>

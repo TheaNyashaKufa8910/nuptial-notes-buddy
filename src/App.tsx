@@ -12,6 +12,8 @@ import Budget from "./pages/Budget";
 import Guests from "./pages/Guests";
 import Checklist from "./pages/Checklist";
 import Calendar from "./pages/Calendar";
+import Vendors from "./pages/Vendors";
+import Inspiration from "./pages/Inspiration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +73,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Calendar />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/vendors"
+              element={
+                <ProtectedRoute>
+                  <Vendors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inspiration"
+              element={
+                <ProtectedRoute>
+                  <Inspiration />
                 </ProtectedRoute>
               }
             />

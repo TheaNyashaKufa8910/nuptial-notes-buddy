@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          location: string | null
+          title: string
+          wedding_id: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          title: string
+          wedding_id: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          title?: string
+          wedding_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_wedding_id_fkey"
+            columns: ["wedding_id"]
+            isOneToOne: false
+            referencedRelation: "weddings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       budget_categories: {
         Row: {
           budgeted: number

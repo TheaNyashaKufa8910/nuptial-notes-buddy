@@ -1,52 +1,56 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { AddTaskDialog } from '@/components/AddTaskDialog';
 import { supabase, type Wedding, type Task, type Milestone } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Calendar, User, Edit } from 'lucide-react';
+import { Calendar, User, Edit, Trash2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Checklist() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [wedding, setWedding] = useState<Wedding | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!user) return;
 
-    const loadData = async () => {
-      const { data: weddingData } = await supabase
-        .from('weddings')
+    const { data: weddingData } = await supabase
+      .from('weddings')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (weddingData) {
+      setWedding(weddingData);
+
+      const { data: tasksData } = await supabase
+        .from('tasks')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('wedding_id', weddingData.id)
+        .order('due_date', { ascending: true });
 
-      if (weddingData) {
-        setWedding(weddingData);
+      const { data: milestonesData } = await supabase
+        .from('milestones')
+        .select('*')
+        .eq('wedding_id', weddingData.id)
+        .order('created_at', { ascending: true });
 
-        const { data: tasksData } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('wedding_id', weddingData.id)
-          .order('due_date', { ascending: true });
+      if (tasksData) setTasks(tasksData);
+      if (milestonesData) setMilestones(milestonesData);
+    }
+  };
 
-        const { data: milestonesData } = await supabase
-          .from('milestones')
-          .select('*')
-          .eq('wedding_id', weddingData.id)
-          .order('created_at', { ascending: true });
-
-        if (tasksData) setTasks(tasksData);
-        if (milestonesData) setMilestones(milestonesData);
-      }
-    };
-
+  useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, loadData]);
 
   const handleToggleTask = async (taskId: string, completed: boolean) => {
     await supabase
@@ -61,9 +65,25 @@ export default function Checklist() {
     );
   };
 
+  const handleDeleteTask = async (taskId: string) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId);
+
+    if (!error) {
+      toast({
+        title: 'Success',
+        description: 'Task deleted successfully',
+      });
+      loadData();
+    }
+  };
+
   return (
     <Layout>
       <div className="space-y-6 max-w-4xl mx-auto">
+        <BackButton />
         <h1 className="text-3xl font-serif font-bold">Smart Checklist & Timeline</h1>
 
         {milestones.length > 0 && (
@@ -98,10 +118,7 @@ export default function Checklist() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-serif font-semibold">Your Wedding Tasks</h2>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add New Task
-            </Button>
+            {wedding && <AddTaskDialog weddingId={wedding.id} onTaskAdded={loadData} />}
           </div>
 
           <div className="space-y-3">
@@ -136,9 +153,18 @@ export default function Checklist() {
                       )}
                     </div>
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDeleteTask(task.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

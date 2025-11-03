@@ -10,6 +10,8 @@ import {
   Calendar,
   Heart,
   LogOut,
+  Briefcase,
+  Image,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +29,8 @@ export const Layout = ({ children }: LayoutProps) => {
     { name: 'Guests', href: '/guests', icon: Users },
     { name: 'Checklist', href: '/checklist', icon: CheckSquare },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
+    { name: 'Vendors', href: '/vendors', icon: Briefcase },
+    { name: 'Inspiration', href: '/inspiration', icon: Image },
   ];
 
   return (

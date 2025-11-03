@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AddGuestDialog } from '@/components/AddGuestDialog';
 import { supabase, type Wedding, type Guest } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Search, Filter, ChevronRight } from 'lucide-react';
+import { Search, Filter, ChevronRight, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Guests() {
@@ -16,33 +18,33 @@ export default function Guests() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!user) return;
 
-    const loadData = async () => {
-      const { data: weddingData } = await supabase
-        .from('weddings')
+    const { data: weddingData } = await supabase
+      .from('weddings')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (weddingData) {
+      setWedding(weddingData);
+
+      const { data: guestsData } = await supabase
+        .from('guests')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('wedding_id', weddingData.id)
+        .order('name', { ascending: true });
 
-      if (weddingData) {
-        setWedding(weddingData);
-
-        const { data: guestsData } = await supabase
-          .from('guests')
-          .select('*')
-          .eq('wedding_id', weddingData.id)
-          .order('name', { ascending: true });
-
-        if (guestsData) {
-          setGuests(guestsData as Guest[]);
-        }
+      if (guestsData) {
+        setGuests(guestsData as Guest[]);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, loadData]);
 
   const filteredGuests = guests.filter((guest) =>
     guest.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -75,6 +77,7 @@ export default function Guests() {
   return (
     <Layout>
       <div className="space-y-6 max-w-4xl mx-auto">
+        <BackButton />
         <h1 className="text-3xl font-serif font-bold">Guest List & RSVP</h1>
 
         <Card>
@@ -103,10 +106,7 @@ export default function Guests() {
         </Card>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Guest
-          </Button>
+          {wedding && <AddGuestDialog weddingId={wedding.id} onGuestAdded={loadData} />}
           <Button variant="outline" className="gap-2">
             <Filter className="h-4 w-4" />
             Filter Guests

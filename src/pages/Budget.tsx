@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
+import { BackButton } from '@/components/BackButton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { AddCategoryDialog } from '@/components/AddCategoryDialog';
 import { supabase, type Wedding, type BudgetCategory } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Download, Plus, ChevronRight, Home, Utensils, Flower2, Camera } from 'lucide-react';
+import { Download, ChevronRight, Home, Utensils, Flower2, Camera, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const iconMap: { [key: string]: any } = {
@@ -22,41 +24,42 @@ export default function Budget() {
   const [totalBudgeted, setTotalBudgeted] = useState(0);
   const [totalSpent, setTotalSpent] = useState(0);
 
-  useEffect(() => {
+  const loadData = async () => {
     if (!user) return;
 
-    const loadData = async () => {
-      const { data: weddingData } = await supabase
-        .from('weddings')
+    const { data: weddingData } = await supabase
+      .from('weddings')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (weddingData) {
+      setWedding(weddingData);
+
+      const { data: categoriesData } = await supabase
+        .from('budget_categories')
         .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+        .eq('wedding_id', weddingData.id)
+        .order('created_at', { ascending: true });
 
-      if (weddingData) {
-        setWedding(weddingData);
-
-        const { data: categoriesData } = await supabase
-          .from('budget_categories')
-          .select('*')
-          .eq('wedding_id', weddingData.id)
-          .order('created_at', { ascending: true });
-
-        if (categoriesData) {
-          setCategories(categoriesData);
-          const budgeted = categoriesData.reduce((sum, cat) => sum + Number(cat.budgeted || 0), 0);
-          const spent = categoriesData.reduce((sum, cat) => sum + Number(cat.spent || 0), 0);
-          setTotalBudgeted(budgeted);
-          setTotalSpent(spent);
-        }
+      if (categoriesData) {
+        setCategories(categoriesData);
+        const budgeted = categoriesData.reduce((sum, cat) => sum + Number(cat.budgeted || 0), 0);
+        const spent = categoriesData.reduce((sum, cat) => sum + Number(cat.spent || 0), 0);
+        setTotalBudgeted(budgeted);
+        setTotalSpent(spent);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, loadData]);
 
   return (
     <Layout>
       <div className="space-y-6 max-w-4xl mx-auto">
+        <BackButton />
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-serif font-bold">Budget Tracker</h1>
           <Button variant="outline" className="gap-2">
@@ -96,10 +99,7 @@ export default function Budget() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-serif font-semibold">Spending Categories</h2>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Category
-            </Button>
+            {wedding && <AddCategoryDialog weddingId={wedding.id} onCategoryAdded={loadData} />}
           </div>
 
           {categories.map((category) => {
